@@ -1,7 +1,14 @@
 {% extends "layout.html" %}
 {% block content%}
-    <h1>{{ current_user.username }}</h1>
-
+    
+    <div class="content-section">
+      <div class="media">
+          <img class="rounded-circle account-img" src="{{ image_file }}">
+          <div class="media-body">
+              <h2 class="account-heading">{{ current_user.username }}</h2>
+          </div>
+      </div>
+    </div>
           <div class="col-md-10">
             <p>
               {% if current_user.level == 1 %}
@@ -26,12 +33,16 @@
               </a>
               {% endif %}
               <a href="{{ url_for('reports') }}" class="btn btn-sq-lg btn-danger">
-                <i class="fa fa-gear fa-5x"></i><br/>
+                <i class="fa fa-bullhorn fa-5x"></i><br/>
                 Reports
               </a>
               <a href="{{ url_for('reminders') }}" class="btn btn-sq-lg btn-secondary">
                 <i class="fa fa-calendar fa-5x"></i><br/>
                 Set Reminders
+              </a>
+              <a href="{{ url_for('accmgmt') }}" class="btn btn-sq-lg btn-secondary">
+                <i class="fa fa-gear fa-5x"></i><br/>
+                Manage Your Account
               </a>
             </p>
           </div>

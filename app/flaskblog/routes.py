@@ -1,10 +1,15 @@
+import os
+import secrets
+from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, jsonify
 from flaskblog import app, db, bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, EvaluateForm, StudentSearchForm, RotationForm #StudentRegForm
+from flaskblog.forms import RegistrationForm, LoginForm, EvaluateForm, StudentSearchForm, RotationForm, UpdateAccountForm #StudentRegForm
 from flaskblog.models import User, Post, Comp, Student, Competancy_rec, User2, Activity
 from flask_login import login_user, current_user, logout_user, login_required
 import flask_excel as excel
 import json
+
+
 posts = [
 
     {
@@ -51,9 +56,11 @@ def register():
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         user = User2(username=form.username.data, email=form.email.data, level=form.level.data, rotation=form.rotation.data, password=hashed_password)
+        activity = Activity(activityType='AC', actionID=user.id, clincianID=current_user.id)
         db.session.add(user)
+        db.session.add(activity)
         db.session.commit()
-        flash('Your account has been created! You are now able to log in', 'success')
+        flash('The account has been created! The Clinician should now able to log in', 'success')
         return redirect(url_for('login'))
     return render_template('register.html', title='Register', form=form)
 
@@ -78,10 +85,11 @@ def logout():
     return redirect(url_for('home'))
 
 
-@app.route("/account")
+@app.route("/account", methods=['GET', 'POST'])
 @login_required
 def account():
-    return render_template('account.html', title='Account.html')
+    image_file = url_for('static', filename='profilepics/'+current_user.image_file)
+    return render_template('account.html', title='Account.html', image_file=image_file)
 
 @app.route("/usersreg")
 @login_required
@@ -230,3 +238,38 @@ def export():
 @app.route("/handson_view", methods=['GET'])
 def handson_table():
     return excel.make_response_from_tables(db.session, [Competancy_rec], 'handsontable.html')
+
+
+def save_picture(form_picture):
+    random_hex = secrets.token_hex(8)
+    _, f_ext = os.path.splitext(form_picture.filename)
+    picture_fn = random_hex + f_ext 
+    picture_path = os.path.join(app.root_path, 'static/profilepics', picture_fn)
+
+    output_size =(125, 125)
+    i = Image.open(form_picture)
+    i.thumbnail(output_size)
+
+    i.save(picture_path)
+
+    return picture_fn
+
+@app.route("/accmgmt", methods=['GET', 'POST'])
+@login_required
+def accmgmt():
+    form = UpdateAccountForm()
+    if form.validate_on_submit():
+        if form.picture.data:
+            picture_file =save_picture(form.picture.data)
+            current_user.image_file = picture_file
+
+        current_user.username = form.username.data
+        current_user.email = form.email.data
+        db.session.commit()
+        flash('Your account has been updated!', 'success')
+        return redirect(url_for('accmgmt'))
+    elif request.method == 'GET':
+        form.username.data = current_user.username
+        form.email.data = current_user.email
+    image_file = url_for('static', filename='profilepics/'+current_user.image_file)
+    return render_template('accmgmt.html', title='Account Management', image_file=image_file, form=form)
