@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content%}
+    <h1>Export Page</h1>
+    <div class="input text"></div>
+
+    <form id="search">
+        <input type="text" id="studentid">
+        <input type="button" value="search" onclick="get_student()">
+    </form>
+
+    <br>
+    <div class="content section">
+        <div id="studentinfo">
+            <p id="ID">Student ID:</p>
+            <p id="Name">Student Name:</p>
+            <p id="Email">Student Email:</p>
+            <p id="Date_enrolled">Year Enrolled:</p>
+        </div>
+    </div>
+    <br>
+    <div>
+        <form action="" method=post enctype=multipart/form-data><p>
+            <output type=file name=file><input type=submit value=Export>
+        </form>
+    </div>
+{% endblock content %}

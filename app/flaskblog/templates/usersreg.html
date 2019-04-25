@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block content%}
+    <h1>Registered Clinicians</h1>
+    <div class="row">
+        <div class="col">
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark">
+                    <tr>
+                        <th>Clincian ID</th><th>Clinician Name</th><th>Email</th><th>Rotation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for val in User2 %}
+                    <tr>
+                        <td>{{val.id}}</td>
+                        <td>{{val.username}}</td>
+                        <td>{{val.email}}</td>
+                        <td>{{val.rotation}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock content %}
