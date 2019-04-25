@@ -88,8 +88,8 @@ class Activity(db.Model):
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     
-    def __init__(self, id, activityType='', actionID='', clincianID=''):
-        self.id = id
+    def __init__(self, activityType='', actionID='', clincianID=''):
+        
         self.activityType = activityType
         self.actionID= actionID
         self.clincianID = clincianID

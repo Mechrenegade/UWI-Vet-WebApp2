@@ -93,3 +93,25 @@ class RotationForm(FlaskForm):
 #         user = User.query.filter_by(student_email=student_email.data).first()
 #         if user:
 #             raise ValidationError('That email is taken. Please enter another email.')
+
+class UpdateAccountForm(FlaskForm):
+    username = StringField('Username',
+     validators=[DataRequired(), Length(min=2, max =20)])
+    email = StringField('Email',
+                        validators=[DataRequired(), Email()])
+    
+    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+
+    submit = SubmitField('Update')
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            user = User2.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('That username is taken. Please choose another name')
+
+    def validate_email(self, email):
+        if email.data != current_user.email:
+            user = User2.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('That email is taken. Please enter another email')
