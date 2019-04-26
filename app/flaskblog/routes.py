@@ -1,31 +1,17 @@
 import os
 import secrets
 from PIL import Image
-from flask import render_template, url_for, flash, redirect, request, jsonify
+from flask import render_template, url_for, flash, redirect, request, jsonify, abort
 from flaskblog import app, db, bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, EvaluateForm, StudentSearchForm, RotationForm, UpdateAccountForm, ChangePasswordForm #StudentRegForm
-from flaskblog.models import User, Post, Comp, Student, Competancy_rec, User2, Activity
+from flaskblog.forms import RegistrationForm, LoginForm, EvaluateForm, StudentSearchForm, RotationForm, UpdateAccountForm, ChangePasswordForm, PostForm #StudentRegForm
+from flaskblog.models import User, Post3, Comp, Student, Competancy_rec, User2, Activity
 from flask_login import login_user, current_user, logout_user, login_required
 import flask_excel as excel
 import json
 
 
-posts = [
 
-    {
-        'author': 'Admin',
-        'title': 'Marking Dates',
-        'content': 'Marking for Clinicial Pathology begins on Wednesday 1st May, 2019!',
-        'date_posted': 'April 18, 2019'
-    },
-    {
-        'author': 'Admin',
-        'title': 'Registration Of Students',
-        'content': 'Student Registration begins on Monday 1st July, 2019.',
-        'date_posted': 'April 18, 2019'
-    },
 
-]
 @app.before_first_request
 def setup():
     db.Model.metadata.create_all(bind=db.engine)
@@ -34,6 +20,8 @@ def setup():
 
 @app.route("/home")
 def home():
+    posts = Post3.query.all()
+    
     return render_template('home.html', posts=posts)
 
 @app.route("/about", methods=['GET', 'POST'])
@@ -292,7 +280,51 @@ def chngpw():
     image_file = url_for('static', filename='profilepics/'+current_user.image_file)
     return render_template('chngpw.html', title='PasswordChangehtml', form=form, image_file=image_file)
 
-@app.route("/post/new")
+@app.route("/post/new", methods=['GET', 'POST'])
 @login_required
 def new_post():
-    return render_template('create_post.html', title='New Post')
+    form = PostForm()
+    if form.validate_on_submit():
+         post = Post3(title=form.title.data, content=form.content.data, author=current_user.username, user_id=current_user.id, image_file=current_user.image_file)
+         db.session.add(post)
+         db.session.commit()
+         flash('Your Post has been created', 'success')
+         return redirect(url_for('home'))
+    return render_template('create_post.html', title='New Post', form=form, legend='New Notification')
+
+@app.route("/post/<int:post_id>")
+def post(post_id):
+    post = Post3.query.get_or_404(post_id)
+    return render_template('post.html', title=post.title, post=post)
+
+@app.route("/post/<int:post_id>/update", methods=['GET', 'POST'])
+@login_required
+def update_post(post_id):
+    post = Post3.query.get_or_404(post_id)
+    if post.user_id != current_user.id:
+        abort(403)
+    
+    form= PostForm()
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.content = form.content.data
+        db.session.commit()
+        flash('Your Notification has been Updated', 'success')
+        return redirect(url_for('post', post_id=post.id))
+    elif request.method == 'GET':
+        form.title.data = post.title
+        form.content.data = post.content
+    return render_template('create_post.html', title='Update Post', 
+                          form=form, legend='Update Notification')
+
+
+@app.route("/post/<int:post_id>/delete", methods=['POST'])
+@login_required
+def delete_post(post_id):
+    post = Post3.query.get_or_404(post_id)
+    if post.user_id != current_user.id:
+        abort(403)
+    db.session.delete(post)
+    db.session.commit()
+    flash('Your Notification has been Deleted', 'success')
+    return redirect(url_for('home'))
