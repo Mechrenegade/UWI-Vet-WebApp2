@@ -3,7 +3,7 @@ import secrets
 from PIL import Image
 from flask import render_template, url_for, flash, redirect, request, jsonify
 from flaskblog import app, db, bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, EvaluateForm, StudentSearchForm, RotationForm, UpdateAccountForm #StudentRegForm
+from flaskblog.forms import RegistrationForm, LoginForm, EvaluateForm, StudentSearchForm, RotationForm, UpdateAccountForm, ChangePasswordForm #StudentRegForm
 from flaskblog.models import User, Post, Comp, Student, Competancy_rec, User2, Activity
 from flask_login import login_user, current_user, logout_user, login_required
 import flask_excel as excel
@@ -56,8 +56,9 @@ def register():
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         user = User2(username=form.username.data, email=form.email.data, level=form.level.data, rotation=form.rotation.data, password=hashed_password)
-        activity = Activity(activityType='AC', actionID=user.id, clincianID=current_user.id)
         db.session.add(user)
+        db.session.commit()
+        activity = Activity(activityType='AC', actionID=user.id, clincianID=current_user.id)
         db.session.add(activity)
         db.session.commit()
         flash('The account has been created! The Clinician should now able to log in', 'success')
@@ -263,11 +264,9 @@ def accmgmt():
             picture_file =save_picture(form.picture.data)
             current_user.image_file = picture_file
 
-        
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
         current_user.username = form.username.data
         current_user.email = form.email.data
-        current_user.password = hashed_password
+        
         db.session.commit()
         flash('Your account has been updated!', 'success')
         return redirect(url_for('accmgmt'))
@@ -277,3 +276,23 @@ def accmgmt():
         form.email.data = current_user.email
     image_file = url_for('static', filename='profilepics/'+current_user.image_file)
     return render_template('accmgmt.html', title='Account Management', image_file=image_file, form=form)
+
+@app.route("/chngpw", methods=['GET', 'POST'])
+@login_required
+def chngpw():
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+           
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        current_user.password = hashed_password
+        db.session.commit()
+        flash('Your password has been changed', 'success')
+        return redirect(url_for('accmgmt'))
+
+    image_file = url_for('static', filename='profilepics/'+current_user.image_file)
+    return render_template('chngpw.html', title='PasswordChangehtml', form=form, image_file=image_file)
+
+@app.route("/post/new")
+@login_required
+def new_post():
+    return render_template('create_post.html', title='New Post')

@@ -122,3 +122,12 @@ class UpdateAccountForm(FlaskForm):
             user = User2.query.filter_by(email=email.data).first()
             if user:
                 raise ValidationError('That email is taken. Please enter another email')
+
+class ChangePasswordForm(FlaskForm):
+    
+    password = PasswordField('New Password')
+    confirm_password = PasswordField('Confirm New Password', 
+                                    validators=[EqualTo('password')])
+    submit = SubmitField('Update')
+
+    
