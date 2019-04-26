@@ -101,8 +101,13 @@ class UpdateAccountForm(FlaskForm):
      validators=[DataRequired(), Length(min=2, max =20)])
     email = StringField('Email',
                         validators=[DataRequired(), Email()])
+
     
-    picture = FileField('Update Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    password = PasswordField('New Password')
+    confirm_password = PasswordField('Confirm New Password', 
+                                    validators=[EqualTo('password')])
+    
+    picture = FileField('Upload a Picture', validators=[FileAllowed(['jpg', 'png'])])
 
     submit = SubmitField('Update')
 
